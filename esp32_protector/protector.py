@@ -1,17 +1,23 @@
 import cadquery as cq
 
-pcb_x = 23.0 + 0.1
-pcb_y = 18.0 + 0.1
-top_height = 2.7
+m = 0.1
+pcb_x = 23.0 + (2 * m)
+pcb_y = 18.0 + (2 * m)
 bottom_z = 5.3
+top_height = 2.7
+wall_z = bottom_z + top_height
 wall_thickness = 1.0
 side_wall_x = (pcb_x / 2) - (wall_thickness / 2)
 front_y = (pcb_y / 2) - (wall_thickness / 2)
 back_y = -(pcb_y / 2) + (wall_thickness / 2)
-gap_width = 6.0
+gap_width = 8.0
 full_wall_length = pcb_x - (2 * wall_thickness)
-wall_z = bottom_z + top_height
 c = (True, True, False)
+pin_hole_x = 20.0 + (2 * m)
+pin_hole_y = 2.4 + (2 * m)
+pin_hole_x_offset = -0.4
+pin_hole_center_dist = 12.5
+pin_y_offset = (pcb_y / 2) - wall_thickness - (pin_hole_y / 2)
 
 def make_short_wall(tx):
     return (
@@ -61,6 +67,17 @@ case = (
     .union(back_wall)
     .cut(front_gap)
     .cut(back_gap)
+)
+
+case = (
+    case.faces(">Z")
+    .workplane()
+    .pushPoints([
+        (pin_hole_x_offset, pin_y_offset),
+        (pin_hole_x_offset, -pin_y_offset)
+    ])
+    .rect(pin_hole_x, pin_hole_y)
+    .cutThruAll()
 )
 
 cq.exporters.export(case, "protector.stl")
