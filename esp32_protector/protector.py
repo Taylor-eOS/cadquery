@@ -1,6 +1,6 @@
 import cadquery as cq
 
-PCB_CLEARANCE = 0.1
+PCB_CLEARANCE = 0.15
 pcb_x = 23.0 + (2 * PCB_CLEARANCE)
 pcb_y = 18.0 + (2 * PCB_CLEARANCE)
 plate_z = 8.0
@@ -12,23 +12,23 @@ side_wall_x = (pcb_x / 2) + (wall_thickness / 2)
 front_y = (pcb_y / 2) + (wall_thickness / 2)
 back_y = -(pcb_y / 2) - (wall_thickness / 2)
 c = (True, True, False)
-PIN_CLEARANCE = 0.15
+PIN_CLEARANCE = 0.2
 pin_hole_y = 2.4 + (2 * PIN_CLEARANCE)
-pin_dist_left = 1.0
-pin_dist_right = 2.0
+pin_dist_left = 0.6
+pin_dist_right = 1.2
 pin_hole_x = pcb_x - pin_dist_left - pin_dist_right
 pin_hole_x_offset = (pin_dist_left - pin_dist_right) / 2
 pin_y_offset = (pcb_y / 2) - (pin_hole_y / 2)
-USB_CLEARANCE = 0.08
+USB_CLEARANCE = 0.1
 usb_z = 3.0 + (2 * USB_CLEARANCE)
 usb_y = 8.8 + (2 * USB_CLEARANCE)
 usb_r = (usb_z / 2) - e
 usb_x = plate_z + 0.7
 rib_x = 10.0
-rib_y = (2 * 0.1)
+rib_y = PCB_CLEARANCE
 rib_z = 2.7
-rib_front_y = (pcb_y / 2) - (rib_y / 2)
-rib_back_y = -(pcb_y / 2) + (rib_y / 2)
+rib_front_y = (pcb_y / 2) - rib_y
+rib_back_y = -(pcb_y / 2) + rib_y
 
 def make_short_wall(tx):
     return (
@@ -37,20 +37,19 @@ def make_short_wall(tx):
         .translate((tx, 0, plate_z))
     )
 
-def make_long_wall(ty):
+def make_long_wall(y_center):
     return (
         cq.Workplane("XY")
         .box(pcb_x, wall_thickness, rib_z, centered=c)
-        .translate((0, ty, plate_z))
+        .translate((0, y_center, plate_z))
     )
 
-def make_pin_hole(ty):
+def make_pin_hole(y_offset):
     tool_height = plate_z + (2 * e)
-    z_start = plate_z + e
     return (
         cq.Workplane("XY")
         .box(pin_hole_x, pin_hole_y, tool_height, centered=c)
-        .translate((pin_hole_x_offset, ty, z_start - tool_height))
+        .translate((pin_hole_x_offset, y_offset, plate_z - tool_height + e))
     )
 
 def make_usb_hole():
@@ -63,11 +62,11 @@ def make_usb_hole():
         .translate((-side_wall_x, 0, usb_x + (usb_z / 2)))
     )
 
-def make_supported_rib(ty, wall_y, direction):
+def make_supported_rib(rib_center_y, wall_y, direction):
     pts = [
         (wall_y, plate_z + rib_z),
-        (ty + (rib_y / 2) * direction, plate_z + rib_z),
-        (ty + (rib_y / 2) * direction, plate_z),
+        (rib_center_y + rib_y * direction, plate_z + rib_z),
+        (rib_center_y + rib_y * direction, plate_z),
         (wall_y, plate_z - rib_z),
         (wall_y, plate_z)
     ]
@@ -83,19 +82,16 @@ left_wall = make_short_wall(-side_wall_x)
 right_wall = make_short_wall(side_wall_x)
 front_wall = make_long_wall(front_y)
 back_wall = make_long_wall(back_y)
-front_rib = make_supported_rib(rib_front_y, front_y - (wall_thickness / 2), -1.0)
-back_rib = make_supported_rib(rib_back_y, back_y + (wall_thickness / 2), 1.0)
+front_rib = make_supported_rib(rib_front_y, front_y - (wall_thickness / 2), -1)
+back_rib = make_supported_rib(rib_back_y, back_y + (wall_thickness / 2), 1)
 usb_hole = make_usb_hole()
 pin_hole_front = make_pin_hole(pin_y_offset)
 pin_hole_back = make_pin_hole(-pin_y_offset)
 
-pin_holes = (
-    pin_hole_front.union(pin_hole_back)
-)
-
 bottom_panel = (
     base_plate
-    .cut(pin_holes)
+    .cut(pin_hole_front)
+    .cut(pin_hole_back)
 )
 
 usb_wall = (
