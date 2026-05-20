@@ -116,4 +116,10 @@ case = (
     .union(walls)
 )
 
+text_plane = cq.Plane(origin=(0, pcb_y / 2 + wall_thickness - 0.2, plate_z + wall_z / 2 - 3.0), normal=(0, 1, 0), xDir=(1, 0, 0))
+text_plane = text_plane.rotated((0, 0, 180))
+text_cutout = cq.Workplane(text_plane).text("ESP32", 5, 0.2)
+
+case = case.cut(text_cutout)
+
 cq.exporters.export(case, "protector.stl")
