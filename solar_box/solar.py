@@ -7,6 +7,7 @@ wall = 0.8
 ledge_drop = 3.1
 ledge_length = 2.4
 z = (height / 2) - ledge_drop
+z_floor = -(height / 2) + wall
 
 box = (
     cq.Workplane("XY")
@@ -15,31 +16,20 @@ box = (
     .shell(-wall)
 )
 
-left_support = (
+supports = (
     cq.Workplane("XZ")
+    .workplane(offset=depth / 2 - wall)
     .polyline([
         (-width / 2 + wall, z),
         (-width / 2 + wall + ledge_length, z),
-        (-width / 2 + wall, z - ledge_length),
+        (-width / 2 + wall, z_floor),
     ])
     .close()
-    .extrude(depth - 2 * wall)
-    .translate((0, depth / 2 - wall, 0))
+    .mirrorY()
+    .extrude(-(depth - 2 * wall))
 )
 
-right_support = (
-    cq.Workplane("XZ")
-    .polyline([
-        (width / 2 - wall, z),
-        (width / 2 - wall - ledge_length, z),
-        (width / 2 - wall, z - ledge_length),
-    ])
-    .close()
-    .extrude(depth - 2 * wall)
-    .translate((0, depth / 2 - wall, 0))
-)
-
-box = box.union(left_support).union(right_support)
+box = box.union(supports)
 
 box = (
     box
