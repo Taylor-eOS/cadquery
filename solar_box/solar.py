@@ -2,7 +2,7 @@ import cadquery as cq
 
 width = 52.0
 depth = 34.0
-height = 12.0
+height = 16.0
 wall = 0.8
 ledge_drop = 3.1
 ledge_length = 2.4
@@ -40,6 +40,22 @@ right_support = (
 )
 
 box = box.union(left_support)
+
 box = box.union(right_support)
+
+box = (
+    box
+    .faces(">Y")
+    .workplane()
+    .hole(4.7, wall * 2)
+)
+
+box = (
+    box
+    .faces("<Y")
+    .workplane()
+    .rect(8.6, 4.0)
+    .cutBlind(-wall * 2)
+)
 
 cq.exporters.export(box, "solar.stl")
