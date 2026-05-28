@@ -39,23 +39,22 @@ right_support = (
     .translate((0, depth / 2 - wall, 0))
 )
 
-box = box.union(left_support)
-
-box = box.union(right_support)
+box = box.union(left_support).union(right_support)
 
 box = (
     box
     .faces(">Y")
-    .workplane()
-    .hole(4.7, wall * 2)
+    .workplane(centerOption="CenterOfMass")
+    .circle(4.7 / 2)
+    .cutBlind(-wall)
 )
 
 box = (
     box
     .faces("<Y")
-    .workplane()
+    .workplane(centerOption="CenterOfMass")
     .rect(8.6, 4.0)
-    .cutBlind(-wall * 2)
+    .cutBlind(-wall)
 )
 
 cq.exporters.export(box, "solar.stl")
